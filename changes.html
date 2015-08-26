@@ -1,0 +1,418 @@
+<html>
+<head>
+<title>FC++ Changes since last version</title>
+</head>
+
+<body>
+
+<p>
+This document summarizes the changes since the previous release of the
+FC++ library.  (As always, see the 
+<a href="http://www.cc.gatech.edu/~yannis/fc++/">FC++ web site</a> for 
+the latest.)
+</p>
+
+<h1>Changes from v1.4 to v1.5</h1>
+
+The library has a number of <b>improvements</b> and <b>additions</b>:
+<ul>
+
+<li><b>Lambda</b>.  FC++ now supports <code>lambda</code>, so you can
+create anonymous functions on-the-fly.  FC++'s lambda has a tiny
+functional sublanguage with features like 
+<code>letrec</code>, <code>do</code>-notation for <a
+href="http://www.cc.gatech.edu/~yannis/fc++/New1.5/lambda.html#monad">monads</a>,
+and comprehensions.  See "<a
+href="http://www.cc.gatech.edu/~yannis/fc++/New1.5/lambda.html">FC++
+Lambda</a>" for more details.</li>
+
+<li><b>Infix syntax</b>.  FC++ functoids now support infix syntax, so
+instead of saying "<code>f(x,y)</code>" you can also say "<code>x ^f^
+y</code>".  See "<a
+href="http://www.cc.gatech.edu/~yannis/fc++/New1.5/infix.html">New infix
+syntax</a>" for details.</li>
+
+<li><b>Smart functoids</b>.  Functoids now "know" how many arguments
+they expect, which makes it possible to implement some useful and
+general combinators.</li>
+
+<li><b>Full functoids</b>.  The <code>FullN</code> wrappers add all the
+extra FC++ functoid functionality (currying, lambda-awareness,
+smartness, infix syntax) to existing functoids.  See "<a
+href="http://www.cc.gatech.edu/~yannis/fc++/New1.5/full.html">Full
+functoids</a>" for details.</li>
+
+<li>There are a number of new functoids, including <code>funify</code>,
+<code>of</code>, <code>thunkFuncToFunc</code>, <code>hCurry</code>,
+<code>hUncurry</code>, <code>delete_</code>,
+<code>outStream</code>, and <code>inStream</code>.
+(<code>operator.h</code> and <code>prelude.h</code>)</li>
+
+<li>The new features required a number of new header files; the new header
+description is <a
+href="http://www.cc.gatech.edu/~yannis/fc++/New/header_dependencies.html">here</a>.</li>
+
+<li>More C++ compilers are supported, see the <a
+href="http://www.cc.gatech.edu/~yannis/fc++/New/compilers.html">compilers
+page</a> for details.</li>
+
+<li>The distribution of client examples now has an index describing the
+more interesting clients.</li>
+
+</ul>
+
+The library also has a number of <b>bug fixes</b> and <b>small changes</b>:
+<ul>
+
+<li><code>ptr_to_fun</code> is now a functoid</li>
+
+<li>When <code>ptr_to_fun</code> is used on an instance method, the
+resulting functoid can now accept a smart pointer (e.g.
+<code>Ref</code>) as the first (receiver) argument</li>
+
+<li>Some of the combinators in <code>prelude.h</code> (like
+<code>ignore</code>) now work properly, regardless of the arity of the
+functoids passed in as an argument, thanks to "smartness".</li>
+
+<li>The <code>Ref</code> and <code>IRef</code> classes now have
+<code>operator==</code> and <code>operator!=</code>; this fixes minor
+bugs that can arise from implicit conversions to pointers.</li>
+
+</ul>
+
+<h1>Changes from v1.3.1 to v1.4</h1>
+
+The library has a number of <b>improvements</b> and <b>additions</b>:
+<ul>
+<li>Added support for the Intel 6.0 compiler (with thanks to Terje 
+Slettebo, who did the testing on this compiler).</li>
+<li>Changed the List implementation to conform to the proposed
+resolution of C++ Core Language Issue 270:
+<a href="http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/cwg_defects.html">"Order 
+of initialization of static data members of class templates"</a>.  <br>
+<font size="-6">
+(This change could potentially make the library run less efficiently if
+your compiler does not optimize function static data well.  As a result,
+the old List implementation is still available via the compiler flag
+<code>FCPP_1_3_LIST_IMPL</code>.  The old implementation technically has
+order-of-initialization (OOI) bugs which may cause programs to coredump, 
+but in practice, these are easy to work around.  If you are using FC++
+in a setting where you need very high performance but are having trouble
+getting the old implementation working without crashes, email Brian and
+he'll show you how to get your code working fast.)</font>
+</li>
+<li>A number of new (non-Haskell) utility functoids have been added to
+prelude.h:  <code>id</code>, <code>noOp</code>, <code>before</code>,
+<code>after</code>, <code>uncurry</code>, <code>duplicate</code>,
+<code>ignore</code>, <code>constructN</code> and <code>newN</code>.
+Also, the <code>Maybe</code> type from Haskell has been added.</li>
+<li>Added functoids for <code>delay</code> and <code>force</code>
+(list.h).</li>
+<li>Added functoids for <code>dereference</code> and <code>addressOf</code>
+(operator.h).</li>
+<li>Monomorphic unary/binary functoids are now implicitly also STL
+functors (e.g. they define <code>F::result_type</code>, etc.).</li>
+<li>Tweaked the <code>Sig</code> structures in a way that enables a new class of
+combinators to be written (<code>compose</code>, <code>before</code>,
+<code>after</code>, and <code>uncurry</code> can
+discover whether or not their arguments are zero-arg functoids, and can
+act accordingly).  Now rather than referring to <code>F::Sig::ResultType</code> for a
+zero-arg functoid of type <code>F</code>, you should refer to
+<code>F::Sig&lt;&gt;::ResultType</code> or just
+<code>RT&lt;F&gt;::ResultType</code> instead.</li>
+<li>The flag <code>FCPP_DEFER_DEFINITIONS</code> will prevent the .h
+files from creating definitions of the library functoids; the
+declarations remain, but you must separately compile
+<code>definitions.cc</code> and link it in.  This is useful for
+applications using FC++ in multiple translation units--it prevents each
+TU from having its own (redundant) copy of each of the library functoid
+objects in favor of a single "master" copy.</li>
+</ul>
+
+The library also has a number of <b>bug fixes</b> and <b>small changes</b>:
+<ul>
+<li>Added <code>ptr_to_fun</code> overloads for const member functions.</li>
+<li>Fixed minor type-system bugs in <code>binder1and2of2</code>,
+<code>stlN</code>, and <code>cat</code>.</li>
+<li>Made curry binders store <code>const</code> data members.</li>
+<li>Deprecated <code>Compose0</code>, as <code>Compose</code> now 
+subsumes it.</li>
+<li>Fixed <code>flip</code> so it returns a curryable result.</li>
+<li>Fixed a number of the prelude functions (like <code>length</code>)
+so that they don't complain if you pass them an <code>OddList</code> 
+instead of a <code>List</code>.</li>
+<li>Gave names <code>const_</code>, <code>and_</code>, and
+<code>or_</code> to corresponding functoids.
+Whenever a functoid's name clashes with a C++ keyword, we add a trailing
+underscore.</li>
+</ul>
+
+Finally, we have a new email discussion list, see the
+<a href="http://www.cc.gatech.edu/~yannis/fc++/">FC++ web site</a> for 
+details about how to subscribe.
+
+<hr>
+
+<h1>Changes from v1.3 to v1.3.1</h1>
+<h6>Note: v1.3.1 was only released for the XR library.</h6>
+
+<ul>
+<li>Fixed a small bug in the template version of <code>enumFrom()</code></li>
+<li>Added copy constructor and assignment operator code to the
+<code>FunN</code> classes (shouldn't be necessary, but without it,
+exposes a compiler bug on at least one platform) </li>
+</ul>
+
+<hr>
+
+<h1>Changes from v1.2.1 to v1.3</h1>
+
+<h2>Improvements</h2>
+
+<ul>
+<li>
+<p>
+The run-time performance of the library has been drastically improved.
+This has all been done "under the hood"; the interface to the library
+has barely changed.  The main sources for the improvements are
+<ul>
+<li>intrusive reference counting</li>
+<li>new implementation of <code>List</code>s</li>
+<li>new techniques for "reusing" functoids in the prelude implementation</li>
+</ul>
+</p>
+</li>
+
+<li>
+<p>
+The library now works with both g++2.95.2 and g++3.0.  It should also
+work with any other standard-conforming C++ compiler.  See
+<a
+href="http://www.cc.gatech.edu/~yannis/fc++/New/compilers.html">this
+page</a> for details.
+</p>
+</li>
+
+<li>
+<p>
+There are now many more example files.
+</p>
+</li>
+
+</ul>
+
+<h2>New additions</h2>
+<ul>
+<li>The <code>Fun3</code> class has finally been implemented.  Like
+<code>Fun2</code> it supports automatic currying.</li>
+
+<li>Class <code>IRef</code> (the intrusive version of
+<code>Ref</code>) has been added.</li>
+
+<li><code>ListIterator</code> now supports
+<code>operator-&gt;</code>.</li>
+
+<li>The flag <code>FCPP_DEBUG</code> turns on extra run-time checking
+so that if you try to <code>head()</code> or <code>tail()</code> an
+empty list, an exception (of type <code>fcpp_exception</code>) is
+thrown.  Without the flag, there is no run-time check (and the code
+fails un-gracefully).</li>
+
+<li>The flag <code>FCPP_SAFE_LIST</code> adds a destructor to the
+<code>List</code> class which ensures that list nodes are destroyed
+iteratively.  The reference-counting in list nodes
+(<code>Cache</code>s) works recursively, and as a result, can blow the
+stack for large lists.  In other words,
+<pre>
+   {
+      List&lt;int&gt; l = enumFromTo(1,200000);
+      length(l);   // force evaluation of the list (actually create nodes)
+   }  // Boom!  Recursion with a call-depth of 200000.
+</pre>
+is likely to "blow up" unless the <code>FCPP_SAFE_LIST</code> flag is
+set.  Setting this flag degrades the overall performance of lists,
+however.  In order to ensure that a <em>specific instance</em> of a
+list doesn't blow up, you can always just iteratively destroy that
+list, as in
+<pre>
+   {
+      List&lt;int&gt; l = enumFromTo(1,200000);
+      length(l);   // force evaluation of the list (actually create nodes)
+      while(l) l = tail(l);   // iteratively destroys list
+   }  // no problem here
+</pre>
+</li>
+
+</ul>
+
+<h2>Changes</h2>
+
+<ul>
+<li>The library no longer has a
+<pre>
+using namespace fcpp;
+</pre>
+at the end of <code>prelude.h</code>.  As a result, you should add this
+yourself to your <code>.cc</code> files that use the library.
+</li>
+
+<li>The signature of <code>cat</code> has changed slightly.  The first
+parameter must be a list, but the second parameter can be either a list
+or a function that returns a list.  (It used to be that both parameters
+could be either lists or functions.)</li>
+
+<li>Due to the new list implementation, the signatures of many of the
+functions in the prelude have changed.  However, this should break very
+little client code.  See <a
+href="http://www.cc.gatech.edu/~yannis/fc++/New/new_list_implementation.html">this
+page</a> for details.</li>
+
+<li>The <code>Sig</code>s of <code>Plus</code>, <code>Minus</code>,
+etc., now better reflect the true signatures of those functoids.</li>
+
+</ul>
+
+<h2>Removals</h2>
+
+<ul>
+<li><code>OneElement</code> (<code>one_element</code>) has been removed.
+You should use <code>cons(x,NIL)</code> instead.</li>
+
+<li><code>Nil&lt;T&gt;</code> has been removed.  You should just use NIL
+instead, unless type inference fails, in which case you can always use
+<code>List&lt;T&gt;()</code>.</li>
+</ul>
+
+<h2>Obscure flags</h2>
+
+<ul>
+
+<li>The flag <code>FCPP_LEAK</code> turns off the reference counting in
+the <code>IRef</code> class.  As a result, the application leaks
+away memory (but might run faster).</li>
+
+<li>The flag <code>FCPP_TEMPLATE_ENUM</code> makes <code>enumFrom()</code> and
+<code>enumFromTo()</code> be template functoids rather than just
+functoids that work on <code>int</code>s.  They really probably should be
+template functoids, however g++2.95.2 seems to generate slow code for
+them when they templated, for no obvious reason.  (g++3 generates fast
+code regardless of whether the functoids are templated or not.)</li>
+
+<li>The flag <code>FCPP_OOI_DEBUG</code> turns on some debugging output for the
+creation of global objects (that may be initialized before
+<code>main()</code>).  This helped us debug order-of-initialization
+errors.</li>
+
+<li>The prelude functions are written with performance in mind, using
+<code>OddList</code>s, <code>Reuser</code>s, and iteration.  The old
+implementations of many of the functions are still there, enclosed in
+<code>#ifdef FCPP_SIMPLE_LIST</code>s.  We've kept the old
+implementations in the file mostly for instructional value (they
+illustrate the simplest ways to create functoids, and also help show
+the changes necessary to create optimized versions of functoids).</li>
+
+</ul>
+
+<hr>
+
+<h1>Changes from v1.2 to v1.2.1</h1>
+
+<p>
+The library now compiles with the "-pedantic -ansi" options for g++,
+which means it will probably compile with more other compilers now, too.
+The previous release had a number of "typename" problems; C++ requires
+the "typename" keyword to appear in lots of places inside templates.
+</p>
+
+<hr>
+
+<h1>Changes from v1.1 to v1.2</h1>
+
+<h2>New additions</h2>
+
+<ul>
+
+<li><b>Automatic currying</b>.  Now (practically) all functoids are
+curryable by default.  For example, 
+<pre>
+   minus(3,2);   // yields 1
+   minus(3);     // yields a new function f, where f(x) = 3-x
+   minus(3,_);   // same as above
+   minus(_,2);   // yields a new function f, where f(x) = x-2
+</pre>
+This is accomplished by the <code>CurryableN</code> classes, which
+serve as wrappers around normal functions.  The function
+<code>makeCurryable()</code> turns an uncurryable function into an
+automatically curryable version.  See <a
+href="http://www.cc.gatech.edu/~yannis/fc++/currying.html">http://www.cc.gatech.edu/~yannis/fc++/currying.html</a>
+for more info.</li>
+
+<li><b>Namespaces</b>.  Now the library is in namespace
+<code>fcpp</code>.  However, bugs in the g++2.95.2 compiler force us to keep
+part of the library in the global namespace.  If you have a working
+compiler, use the compiler option -DFCPP_USE_NAMESPACE to have the whole 
+library be in the namespace.  There's a 
+<pre>
+   using namespace fcpp;
+</pre> 
+at the bottom of <code>prelude.h</code>, which dumps it all
+into the global namespace anyway.  We've done that for backwards
+compatibility (you can drop in the new library and your old code should
+still work without changes), but feel free to remove it (we certainly
+will, in a future revision).</li>
+
+<li>There is now an implicit conversion from direct
+functoids to indirect functoids (<code>FunN</code>s).  For example,
+<pre>
+   Fun1&lt;int,int,int&gt; f          = fcpp::plus;
+   Fun1&lt;double,double,double&gt; g = fcpp::plus;
+</pre>
+both "do the right thing".</li>
+
+<li>A number of "holes" in the library have been filled in; now
+practically all of the general functions/classes (like
+<code>ptr_to_fun()</code>, <code>monomorphizeN()</code>,
+<code>CurryableN</code>, etc.) work for all sets of functions with 0-3
+arguments.  (Previous versions of FC++ had spotty support.)</li>
+
+<li>This file: we plan to keep track of changes between versions from
+now on, and put the changes in the distribution.</li>
+
+</ul>
+
+<hr>
+
+<h2>Changes (from v1.0 to v1.1)</h2>
+
+<ul>
+
+<li>The <code>List</code> class has been completely re-implemented.
+The old version had a number of problems (the major ones being that (1)
+it was too eager (not lazy enough) in a number of cases, and (2) that
+functions like <code>cons</code> had un-intuitive interfaces) that have
+now been solved.  In our limited tests, the new <code>List</code> seems
+to perform comparably with the old, but let us know if you notice a
+speed difference.</li>
+
+<li><code>List::WrappedType</code> has been renamed to 
+<code>List::ElementType</code>.  The new name makes more sense,
+especially in papers/tutorials.</li>
+
+<li>Header dependencies have been minimized; the library should only
+suck in the headers it needs now, which means faster compile-times.</li>
+
+<li>A number of minor bugs have been fixed throughout the library.</li>
+
+<li>The function <code>list_until</code> has been renamed
+<code>listUntil</code> (consistent with
+naming convention of other list functions).</li>
+
+</ul>
+
+<hr>
+
+<a href="http://www.cc.gatech.edu/~yannis/fc++/">FC++ homepage</a>
+
+</body>
+</html>
+
