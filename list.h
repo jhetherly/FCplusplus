@@ -7,6 +7,8 @@
 // appear in all source code copies and supporting documentation. The
 // software is provided "as is" without any express or implied
 // warranty.
+//
+// Updated 2015 Jeffrey Hetherly
 
 #ifndef FCPP_LIST_DOT_H
 #define FCPP_LIST_DOT_H
@@ -103,6 +105,10 @@ public:
    List( const It& begin, const It& end )
    : rep( new Cache<T>( ListItHelp<T,It>(begin,end) ) ) {}
 
+   // force evaluation per comment above (assume l is a temporary)
+   List( std::initializer_list<T> &&l )
+     : List( l.begin(), l.end() ) {for(auto e : *this) e;}
+
    List( const OddList<T>& e )
    : rep( (e.second.rep != Cache<T>::XNIL()) ? 
           new Cache<T>(e) : Cache<T>::XEMPTY() ) {}
@@ -131,6 +137,13 @@ public:
    }
 #endif
 
+   List<T>& operator= ( std::initializer_list<T> &&l ) 
+   {
+     if (!this->priv_isEmpty())
+       return *this;
+     *this = List<T>(std::move(l));
+     return *this;
+   }
    operator bool() const { return !priv_isEmpty(); }
    const OddList<T>& force() const { return rep->cache(); }
    const List<T>& delay() const { return *this; }
@@ -449,9 +462,9 @@ struct ListItHelp : public CFunType<OddList<T> > {
    
 template <class T>
 #ifdef FCPP_NO_STD_ITER
-class ListIterator : public std::input_iterator<T,ptrdiff_t> {
+class ListIterator : public std::input_iterator<T,std::ptrdiff_t> {
 #else
-class ListIterator : public std::iterator<std::input_iterator_tag,T,ptrdiff_t> {
+class ListIterator : public std::iterator<std::input_iterator_tag,T,std::ptrdiff_t> {
 #endif
    List<T> l;
    bool is_nil;
